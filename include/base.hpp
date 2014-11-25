@@ -1,29 +1,42 @@
 #include <stdexcept>
+#include <limits>
+
 #include "location.hpp"
 
-class InvalidGrid {};
+class InvalidGrid : public std::length_error
+{
+public:
+	InvalidGrid(const char* what):
+		std::length_error(what) {}
 
-template<class T, class I=long>
+	InvalidGrid(const std::string& what):
+		std::length_error(what) {}
+};
+
+template<class T, class I>
 class BaseGrid
 {
-private:
-	static_assert(std::is_integral<I>::value,
-		"Grid index must be of integral type");
+public:
+	static_assert(std::is_unsigned<I>::value,
+		"Grid index must be of unsigned integral type");
+	typedef BaseLocation<I> location_type;
 
+private:
 	I _num_rows;
 	I _num_columns;
 
-	virtual T& unsafe_at(const Location<I>& loc) =0;
-	virtual const T& unsafe_at(const Location<I>& loc) const =0;
+	virtual T& unsafe_at(const location_type& loc) =0;
+	virtual const T& unsafe_at(const location_type& loc) const =0;
 
 public:
-	BaseGrid(I num_rows, I num_columns):
+	explicit BaseGrid(I num_rows, I num_columns):
 		_num_rows(num_rows),
 		_num_columns(num_columns)
-	{
-		if(num_rows < 0 || num_columns < 0)
-			throw InvalidGrid();
-	}
+	{}
+
+	explicit BaseGrid(const location_type& dimensions):
+		BaseGrid(dimensions.row, dimensions.column)
+	{}
 
 	virtual ~BaseGrid() {}
 
@@ -33,8 +46,8 @@ public:
 	I num_columns() const
 	{ return _num_columns; }
 
-	Location<I> dimensions() const
-	{ return Location<I>(num_rows, num_columns); }
+	location_type dimensions() const
+	{ return location_type(num_rows, num_columns); }
 
 	/*
 	 * BOUNDS CHECKERS
@@ -46,7 +59,7 @@ public:
 	bool valid_column(I column) const
 	{ return 0 <= column && column <= num_columns(); }
 
-	bool valid(const Location<I>& loc) const
+	bool valid(const location_type& loc) const
 	{ return valid_row(loc.row) && valid_column(loc.column); }
 
 	void check_row(I row) const
@@ -61,7 +74,7 @@ public:
 			throw std::out_of_range("column out of range");
 	}
 
-	void check_location(const Location<I>& loc)
+	void check_location(const location_type& loc)
 	{
 		check_row(loc.row);
 		check_column(loc.column);
@@ -71,26 +84,39 @@ public:
 	 * Basic element access
 	 */
 
-	T& operator[](const Location<I>& loc)
+	T& operator[](const location_type& loc)
 	{ return unsafe_at(loc); }
 
-	const T& operator[](const Location<I>& loc) const
+	const T& operator[](const location_type& loc) const
 	{ return unsafe_at(loc); }
 
-	T& at(const Location<I>& loc)
+	T& at(const location_type& loc)
 	{
 		check_location(loc);
 		return unsafe_get(loc);
 	}
 
-	const T& at(const Location<I>& loc) const
+	const T& at(const location_type& loc) const
 	{
 		check_location(loc);
 		return unsafe_get(loc);
 	}
 
 	/*
-	 * TODO: Ranges
-	 */
+	TODO: Ranges, ie:
+
+	for(auto row : grid.rows())
+	{
+		for(auto& cell : row)
+		{
+
+		}
+	}
+
+	for(auto& cell : grid.column(2))
+	{
+
+	}
+	*/
 
 };
