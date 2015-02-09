@@ -1,6 +1,5 @@
 #pragma once
 
-#include <array>
 #include <type_traits>
 #include <functional>
 
@@ -104,33 +103,6 @@ public:
 		case Direction::right:
 			return right(distance);
 		}
-	}
-
-	std::array<BaseLocation, 4> adjacent() const
-	{ return {{above(), below(), left(), right()}}; }
-
-	std::array<BaseLocation, 4> diagonals() const
-	{
-		return {{
-			relative(1, 1),
-			relative(-1, 1),
-			relative(1, -1),
-			relative(-1, -1)
-		}};
-	}
-
-	std::array<BaseLocation, 8> surrounding() const
-	{
-		return {{
-			relative(1, 1),
-			relative(0, 1),
-			relative(-1, 1),
-			relative(-1, 0),
-			relative(-1, -1),
-			relative(0, -1),
-			relative(1, -1),
-			relative(1, 0)
-		}};
 	}
 
 	template<class U>
